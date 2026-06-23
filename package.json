@@ -1,0 +1,24 @@
+{
+  "name": "campus-equipment-system",
+  "version": "1.0.0",
+  "description": "Campus equipment borrowing management system using Node.js, Express, and MS SQL Server.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "campus",
+    "equipment",
+    "express",
+    "mssql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "msnodesqlv8": "^5.2.0",
+    "mssql": "^11.0.1"
+  }
+}

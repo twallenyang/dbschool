@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校園設備借用管理系統</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #68758a;
+      --line: #d9e0ea;
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --danger: #dc2626;
+      --success: #15803d;
+      --warning: #b45309;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Microsoft JhengHei", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+      padding: 20px 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .school-logo {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      min-height: calc(100vh - 74px);
+    }
+
+    nav {
+      background: #ffffff;
+      border-right: 1px solid var(--line);
+      padding: 18px;
+    }
+
+    nav button {
+      width: 100%;
+      display: block;
+      margin-bottom: 10px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    nav button.active,
+    nav button:hover {
+      border-color: var(--primary);
+      background: #eff6ff;
+      color: var(--primary-dark);
+    }
+
+    main {
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    section {
+      display: none;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 14px;
+    }
+
+    .stat {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      margin-top: 4px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .primary,
+    .secondary,
+    .danger {
+      border: 0;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #ffffff;
+    }
+
+    .primary {
+      background: var(--primary);
+    }
+
+    .primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .secondary {
+      background: #475569;
+    }
+
+    .danger {
+      background: var(--danger);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: #ffffff;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .badge.Available,
+    .badge.Approved,
+    .badge.Good,
+    .badge.Returned,
+    .badge.Completed {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .badge.Borrowed,
+    .badge.Pending,
+    .badge.Processing,
+    .badge.Reported {
+      background: #fef3c7;
+      color: var(--warning);
+    }
+
+    .badge.Maintenance,
+    .badge.Rejected,
+    .badge.Damaged,
+    .badge.Lost {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .message {
+      display: none;
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      margin-bottom: 14px;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .message.error {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .actions button {
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      border: 0;
+      cursor: pointer;
+      color: #ffffff;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
+    .col-id {
+      width: 76px;
+      white-space: nowrap;
+    }
+
+    .col-person {
+      width: 84px;
+      white-space: nowrap;
+    }
+
+    .col-date {
+      width: 112px;
+      white-space: nowrap;
+    }
+
+    .col-status {
+      width: 92px;
+      white-space: nowrap;
+    }
+
+    .col-actions {
+      width: 124px;
+      white-space: nowrap;
+    }
+
+    .col-equipment {
+      min-width: 260px;
+    }
+
+    .col-purpose,
+    .col-reason {
+      min-width: 220px;
+      max-width: 320px;
+    }
+
+    .login-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 28px;
+      background: #eef4ff;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .login-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .login-control select {
+      width: auto;
+      min-width: 260px;
+    }
+
+    .login-control input {
+      width: 220px;
+    }
+
+    .role-note {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    body:not(.logged-in) header,
+    body:not(.logged-in) .layout {
+      display: none;
+    }
+
+    body:not(.logged-in) .login-bar {
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 28px;
+      border-bottom: 0;
+      background: var(--bg);
+    }
+
+    body:not(.logged-in) .login-bar > div:first-child {
+      max-width: 560px;
+    }
+
+    body:not(.logged-in) .login-bar strong {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    body:not(.logged-in) .login-logo {
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+
+    body:not(.logged-in) .login-control {
+      width: min(460px, 100%);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      justify-content: stretch;
+    }
+
+    body:not(.logged-in) .login-control label,
+    body:not(.logged-in) .login-control input,
+    body:not(.logged-in) .login-control button {
+      width: 100%;
+      text-align: left;
+    }
+
+    body:not(.logged-in) .login-control button {
+      text-align: center;
+    }
+
+    body:not(.logged-in) .login-control .secondary,
+    body:not(.logged-in) #currentUserInfo {
+      display: none;
+    }
+
+    body.logged-in .login-bar {
+      display: contents;
+    }
+
+    body.logged-in .login-bar > div:first-child,
+    body.logged-in .login-control label,
+    body.logged-in .login-control input,
+    body.logged-in .login-control .primary {
+      display: none;
+    }
+
+    body.logged-in .login-control {
+      margin-left: auto;
+      margin-bottom: 0;
+    }
+
+    body.logged-in #currentUserInfo::before {
+      content: "目前登入：";
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    @media (max-width: 820px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      nav button {
+        margin-bottom: 0;
+        text-align: center;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      .stats,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top-header">
+      <div class="brand">
+        <img class="school-logo" src="logo.png" alt="校徽" onerror="this.style.display='none'">
+        <div>
+          <h1>校園設備借用管理系統</h1>
+          <div class="muted">Node.js + Express + MS SQL Server</div>
+        </div>
+      </div>
+      <div>
+        <div id="loggedInControls"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="login-bar">
+    <div>
+      <img class="login-logo" src="logo.png" alt="校徽" onerror="this.style.display='none'">
+      <strong>校園設備借用管理系統</strong>
+      <span class="muted">請使用 Email 與密碼登入</span>
+    </div>
+    <form class="login-control" onsubmit="login(event)">
+      <label for="loginEmail">帳號</label>
+      <input id="loginEmail" type="email" placeholder="user@example.com" required>
+      <label for="loginPassword">密碼</label>
+      <input id="loginPassword" type="password" placeholder="請輸入密碼" required>
+      <button class="primary" type="submit">登入</button>
+      <button class="secondary" type="button" onclick="logout()">登出</button>
+      <span id="currentUserInfo" class="role-note">尚未登入</span>
+    </form>
+  </div>
+
+  <div class="layout">
+    <nav>
+      <button class="nav-button active" data-section="dashboardSection">儀表板</button>
+      <button class="nav-button" data-section="equipmentSection">設備清單</button>
+      <button class="nav-button" data-section="requestSection">新增借用申請</button>
+      <button id="reviewNavButton" class="nav-button" data-section="reviewSection">申請審核</button>
+      <button class="nav-button" data-section="borrowReturnSection">借出與歸還</button>
+      <button class="nav-button" data-section="reportSection">查詢報表</button>
+    </nav>
+
+    <main>
+      <div id="message" class="message"></div>
+
+      <section id="dashboardSection" class="active">
+        <div class="section-header">
+          <h2>儀表板</h2>
+          <button class="primary" onclick="loadDashboard()">重新整理</button>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="muted">設備總數</span>
+            <strong id="totalEquipment">0</strong>
+          </div>
+          <div class="stat">
+            <span class="muted">可借用設備</span>
+            <strong id="availableEquipment">0</strong>
+          </div>
+          <div class="stat">
+            <span class="muted">待審核申請</span>
+            <strong id="pendingRequests">0</strong>
+          </div>
+          <div class="stat">
+            <span class="muted">維修中設備</span>
+            <strong id="maintenanceEquipment">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="equipmentSection">
+        <div class="section-header">
+          <h2>設備清單</h2>
+          <button class="primary" onclick="loadEquipment()">重新整理</button>
+        </div>
+        <div class="card">
+          <div id="equipmentTable"></div>
+        </div>
+      </section>
+
+      <section id="requestSection">
+        <div class="section-header">
+          <h2>新增借用申請</h2>
+          <button class="secondary" onclick="loadEquipment()">重新載入設備</button>
+        </div>
+        <div class="card">
+          <form id="borrowRequestForm" onsubmit="createBorrowRequest(event)">
+            <div class="form-grid">
+              <div>
+                <label>申請人</label>
+                <div id="requestUserDisplay" class="muted">請先選擇目前使用者</div>
+              </div>
+              <div>
+                <label for="equipmentSelect">欲借用設備</label>
+                <select id="equipmentSelect" name="EquipmentID" required></select>
+              </div>
+              <div>
+                <label for="borrowDate">預計借用日期</label>
+                <input id="borrowDate" name="ExpectedBorrowDate" type="date" required>
+              </div>
+              <div>
+                <label for="returnDate">預計歸還日期</label>
+                <input id="returnDate" name="ExpectedReturnDate" type="date" required>
+              </div>
+              <div class="full">
+                <label for="purpose">借用目的</label>
+                <textarea id="purpose" name="Purpose" required></textarea>
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top: 14px;">
+              <button class="primary" type="submit">送出申請</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="reviewSection">
+        <div class="section-header">
+          <h2>借用申請審核</h2>
+          <button class="primary" onclick="loadBorrowRequests()">重新整理</button>
+        </div>
+        <div class="card">
+          <div id="borrowRequestsTable"></div>
+        </div>
+      </section>
+
+      <section id="borrowReturnSection">
+        <div class="section-header">
+          <h2>借出與歸還管理</h2>
+          <button class="primary" onclick="loadBorrowAndReturnRecords()">重新整理</button>
+        </div>
+        <div class="card">
+          <h3>借用紀錄（含已歸還）</h3>
+          <div id="borrowRecordsTable"></div>
+        </div>
+        <div class="card">
+          <h3>歸還明細紀錄</h3>
+          <div id="returnRecordsTable"></div>
+        </div>
+      </section>
+
+      <section id="reportSection">
+        <div class="section-header">
+          <h2>查詢報表</h2>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <button class="primary" onclick="loadJoinReport()">借用明細報表</button>
+            <button class="primary" onclick="loadAggregateReport()">類別借用統計</button>
+            <button class="primary" onclick="loadSubqueryReport()">熱門設備分析</button>
+          </div>
+          <div id="reportTitle" class="muted">請選擇一種報表。</div>
+          <div id="reportTable" style="margin-top: 14px;"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function isCurrentUserAdmin() {
+      return currentUser && String(currentUser.Role).trim().toLowerCase() === 'admin';
+    }
+
+    function updateCurrentUserUI() {
+      const info = document.getElementById('currentUserInfo');
+      const requestUserDisplay = document.getElementById('requestUserDisplay');
+      const reviewNavButton = document.getElementById('reviewNavButton');
+      const loginBar = document.querySelector('.login-bar');
+      const loginControl = document.querySelector('.login-control');
+      const loggedInControls = document.getElementById('loggedInControls');
+
+      if (!currentUser) {
+        document.body.classList.remove('logged-in');
+        if (loginControl.parentElement !== loginBar) {
+          loginBar.appendChild(loginControl);
+        }
+        info.textContent = '尚未登入';
+        requestUserDisplay.textContent = '請先登入';
+        reviewNavButton.style.display = 'none';
+        return;
+      }
+
+      document.body.classList.add('logged-in');
+      if (loginControl.parentElement !== loggedInControls) {
+        loggedInControls.appendChild(loginControl);
+      }
+      info.textContent = `${currentUser.FullName} / ${currentUser.Role}`;
+      requestUserDisplay.textContent = `${currentUser.FullName} (${currentUser.Role})`;
+      reviewNavButton.style.display = isCurrentUserAdmin() ? '' : 'none';
+
+      if (!isCurrentUserAdmin() && document.getElementById('reviewSection').classList.contains('active')) {
+        showSection('dashboardSection');
+      }
+    }
+
+    async function login(event) {
+      event.preventDefault();
+
+      try {
+        currentUser = await apiFetch('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            Email: document.getElementById('loginEmail').value.trim(),
+            Password: document.getElementById('loginPassword').value
+          })
+        });
+
+        document.getElementById('loginPassword').value = '';
+        showMessage(`登入成功：${currentUser.FullName}`);
+      } catch (error) {
+        currentUser = null;
+        showMessage(error.message, 'error');
+      }
+
+      updateCurrentUserUI();
+      loadBorrowRequests();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      updateCurrentUserUI();
+      showMessage('已登出。');
+    }
+
+    function showMessage(text, type = 'success') {
+      const message = document.getElementById('message');
+      message.textContent = text;
+      message.className = `message ${type} show`;
+      window.setTimeout(() => {
+        message.className = 'message';
+      }, 4500);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        },
+        ...options
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json') ? await response.json() : await response.text();
+
+      if (!response.ok) {
+        const message = payload && (payload.details || payload.error) ? (payload.details || payload.error) : `API error: ${response.status}`;
+        throw new Error(message);
+      }
+
+      return payload;
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+      return String(value).slice(0, 10);
+    }
+
+    function formatValue(value) {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+        return formatDate(value);
+      }
+      return value;
+    }
+
+    function statusBadge(value) {
+      if (!value) return '';
+      const safeValue = String(value).replace(/[^\w-]/g, '');
+      const statusText = {
+        Available: '可借用',
+        Borrowed: '已借出',
+        Maintenance: '維修中',
+        Retired: '已淘汰',
+        Pending: '待審核',
+        Approved: '已核准',
+        Rejected: '已拒絕',
+        Cancelled: '已取消',
+        Returned: '已歸還',
+        Lost: '遺失',
+        Good: '良好',
+        Damaged: '損壞',
+        Reported: '已通報',
+        Processing: '處理中',
+        Completed: '已完成'
+      };
+      return `<span class="badge ${safeValue}">${statusText[value] || value}</span>`;
+    }
+
+    function renderTable(targetId, rows, columns, emptyText = '目前沒有資料。') {
+      const target = document.getElementById(targetId);
+
+      if (!rows || rows.length === 0) {
+        target.innerHTML = `<div class="muted">${emptyText}</div>`;
+        return;
+      }
+
+      const head = columns.map((column) => `<th class="${column.className || ''}">${column.label}</th>`).join('');
+      const body = rows.map((row) => {
+        const cells = columns.map((column) => {
+          const rawValue = typeof column.value === 'function' ? column.value(row) : row[column.key];
+          const value = column.isHtml ? rawValue : escapeHtml(formatValue(rawValue));
+          return `<td class="${column.className || ''}">${value}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+
+      target.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${head}</tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showSection(sectionId) {
+      if (sectionId === 'reviewSection' && !isCurrentUserAdmin()) {
+        showMessage('只有管理員可以進入申請審核。', 'error');
+        sectionId = 'dashboardSection';
+      }
+
+      document.querySelectorAll('main section').forEach((section) => {
+        section.classList.toggle('active', section.id === sectionId);
+      });
+
+      document.querySelectorAll('.nav-button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.section === sectionId);
+      });
+
+      if (sectionId === 'dashboardSection') loadDashboard();
+      if (sectionId === 'equipmentSection') loadEquipment();
+      if (sectionId === 'requestSection') {
+        loadEquipment();
+      }
+      if (sectionId === 'reviewSection') loadBorrowRequests();
+      if (sectionId === 'borrowReturnSection') loadBorrowAndReturnRecords();
+    }
+
+    async function loadDashboard() {
+      try {
+        const [equipment, requests] = await Promise.all([
+          apiFetch('/api/equipment'),
+          apiFetch('/api/borrow-requests')
+        ]);
+
+        document.getElementById('totalEquipment').textContent = equipment.length;
+        document.getElementById('availableEquipment').textContent = equipment.filter((item) => item.Status === 'Available').length;
+        document.getElementById('pendingRequests').textContent = requests.filter((item) => item.RequestStatus === 'Pending').length;
+        document.getElementById('maintenanceEquipment').textContent = equipment.filter((item) => item.Status === 'Maintenance').length;
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadEquipment() {
+      try {
+        const equipment = await apiFetch('/api/equipment');
+
+        renderTable('equipmentTable', equipment, [
+          { key: 'EquipmentID', label: 'EquipmentID' },
+          { key: 'EquipmentName', label: 'EquipmentName' },
+          { key: 'CategoryName', label: 'CategoryName' },
+          { key: 'AssetTag', label: 'AssetTag' },
+          { key: 'Brand', label: 'Brand' },
+          { key: 'Model', label: 'Model' },
+          { key: 'Status', label: 'Status', value: (row) => statusBadge(row.Status), isHtml: true }
+        ]);
+
+        const equipmentSelect = document.getElementById('equipmentSelect');
+        if (equipmentSelect) {
+          const availableEquipment = equipment.filter((item) => item.Status === 'Available');
+          equipmentSelect.innerHTML = availableEquipment
+            .map((item) => `<option value="${item.EquipmentID}">${escapeHtml(item.EquipmentName)} (${escapeHtml(item.AssetTag)}) - ${escapeHtml(item.Status)}</option>`)
+            .join('');
+
+          if (availableEquipment.length === 0) {
+            equipmentSelect.innerHTML = '<option value="">目前沒有可借用設備</option>';
+          }
+        }
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadBorrowRequests() {
+      try {
+        const requests = await apiFetch('/api/borrow-requests');
+
+        renderTable('borrowRequestsTable', requests, [
+          { key: 'RequestID', label: '編號', className: 'col-id' },
+          { key: 'ApplicantName', label: '申請人', className: 'col-person' },
+          { key: 'EquipmentInfo', label: '借用設備', className: 'col-equipment' },
+          { key: 'ExpectedBorrowDate', label: '借用日', value: (row) => `<span class="nowrap">${formatDate(row.ExpectedBorrowDate)}</span>`, isHtml: true, className: 'col-date' },
+          { key: 'ExpectedReturnDate', label: '歸還日', value: (row) => `<span class="nowrap">${formatDate(row.ExpectedReturnDate)}</span>`, isHtml: true, className: 'col-date' },
+          { key: 'Purpose', label: '用途', className: 'col-purpose' },
+          { key: 'RequestStatus', label: '狀態', value: (row) => statusBadge(row.RequestStatus), isHtml: true, className: 'col-status' },
+          { key: 'ApproverName', label: '審核人', className: 'col-person' },
+          { key: 'RejectReason', label: '拒絕原因', className: 'col-reason' },
+          {
+            key: 'Actions',
+            label: '操作',
+            isHtml: true,
+            className: 'col-actions',
+            value: (row) => {
+              if (row.RequestStatus !== 'Pending' || !isCurrentUserAdmin()) return '';
+              return `
+                <div class="actions">
+                  <button class="primary" onclick="approveRequest(${row.RequestID})">核准</button>
+                  <button class="danger" onclick="rejectRequest(${row.RequestID})">拒絕</button>
+                </div>
+              `;
+            }
+          }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function createBorrowRequest(event) {
+      event.preventDefault();
+
+      if (!currentUser) {
+        showMessage('請先選擇目前使用者。', 'error');
+        return;
+      }
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+      payload.UserID = Number(currentUser.UserID);
+      payload.EquipmentID = Number(payload.EquipmentID);
+
+      if (!payload.EquipmentID) {
+        showMessage('目前沒有可借用設備。', 'error');
+        return;
+      }
+
+      if (payload.ExpectedReturnDate < payload.ExpectedBorrowDate) {
+        showMessage('預計歸還日不能早於預計借用日。', 'error');
+        return;
+      }
+
+      try {
+        await apiFetch('/api/borrow-requests', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        form.reset();
+        showMessage('借用申請已送出。');
+        await loadBorrowRequests();
+        await loadDashboard();
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function approveRequest(requestId) {
+      if (!isCurrentUserAdmin()) {
+        showMessage('只有管理員可以核准申請。', 'error');
+        return;
+      }
+
+      try {
+        await apiFetch(`/api/borrow-requests/${requestId}/approve`, {
+          method: 'PUT',
+          body: JSON.stringify({ ApprovedBy: currentUser.UserID })
+        });
+        showMessage(`申請 #${requestId} 已核准。`);
+        await loadBorrowRequests();
+        await loadDashboard();
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function rejectRequest(requestId) {
+      if (!isCurrentUserAdmin()) {
+        showMessage('只有管理員可以拒絕申請。', 'error');
+        return;
+      }
+
+      const reason = window.prompt('請輸入拒絕原因：', '設備已被其他活動預約');
+      if (!reason) return;
+
+      try {
+        await apiFetch(`/api/borrow-requests/${requestId}/reject`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            ApprovedBy: currentUser.UserID,
+            RejectReason: reason
+          })
+        });
+        showMessage(`申請 #${requestId} 已拒絕。`);
+        await loadBorrowRequests();
+        await loadDashboard();
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadBorrowAndReturnRecords() {
+      await Promise.all([loadBorrowRecords(), loadReturnRecords()]);
+    }
+
+    async function loadBorrowRecords() {
+      try {
+        const rows = await apiFetch('/api/borrow-records');
+        renderTable('borrowRecordsTable', rows, [
+          { key: 'BorrowRecordID', label: '借用紀錄編號' },
+          { key: 'RequestID', label: '申請編號' },
+          { key: 'ApplicantName', label: '申請人' },
+          { key: 'BorrowedAt', label: '借出日期', value: (row) => formatDate(row.BorrowedAt) },
+          { key: 'DueDate', label: '應歸還日', value: (row) => formatDate(row.DueDate) },
+          { key: 'HandledByName', label: '經手人' },
+          { key: 'BorrowStatus', label: '借用狀態', value: (row) => statusBadge(row.BorrowStatus), isHtml: true }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadReturnRecords() {
+      try {
+        const rows = await apiFetch('/api/return-records');
+        renderTable('returnRecordsTable', rows, [
+          { key: 'ReturnRecordID', label: '歸還紀錄編號' },
+          { key: 'BorrowRecordID', label: '借用紀錄編號' },
+          { key: 'RequestID', label: '申請編號' },
+          { key: 'ApplicantName', label: '申請人' },
+          { key: 'ReturnedAt', label: '歸還日期', value: (row) => formatDate(row.ReturnedAt) },
+          { key: 'ConditionStatus', label: '設備狀況', value: (row) => statusBadge(row.ConditionStatus), isHtml: true },
+          { key: 'LateFee', label: '逾期費用' },
+          { key: 'HandledByName', label: '經手人' },
+          { key: 'Note', label: '備註' }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadJoinReport() {
+      try {
+        const rows = await apiFetch('/api/reports/join');
+        document.getElementById('reportTitle').textContent = '借用明細報表（JOIN 查詢）';
+        renderTable('reportTable', rows, [
+          { key: 'RequestID', label: 'RequestID' },
+          { key: 'ApplicantName', label: 'ApplicantName' },
+          { key: 'Role', label: 'Role' },
+          { key: 'EquipmentName', label: 'EquipmentName' },
+          { key: 'CategoryName', label: 'CategoryName' },
+          { key: 'ExpectedBorrowDate', label: 'ExpectedBorrowDate', value: (row) => formatDate(row.ExpectedBorrowDate) },
+          { key: 'ExpectedReturnDate', label: 'ExpectedReturnDate', value: (row) => formatDate(row.ExpectedReturnDate) },
+          { key: 'RequestStatus', label: 'RequestStatus', value: (row) => statusBadge(row.RequestStatus), isHtml: true }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadAggregateReport() {
+      try {
+        const rows = await apiFetch('/api/reports/aggregate');
+        document.getElementById('reportTitle').textContent = '類別借用統計（Aggregate 查詢）';
+        renderTable('reportTable', rows, [
+          { key: 'CategoryName', label: 'CategoryName' },
+          { key: 'BorrowCount', label: 'BorrowCount' }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadSubqueryReport() {
+      try {
+        const rows = await apiFetch('/api/reports/subquery');
+        document.getElementById('reportTitle').textContent = '熱門設備分析（Subquery 查詢）';
+        renderTable('reportTable', rows, [
+          { key: 'EquipmentName', label: 'EquipmentName' },
+          { key: 'BorrowCount', label: 'BorrowCount' }
+        ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    document.querySelectorAll('.nav-button').forEach((button) => {
+      button.addEventListener('click', () => showSection(button.dataset.section));
+    });
+
+    loadDashboard();
+    loadEquipment();
+    updateCurrentUserUI();
+  </script>
+</body>
+</html>
