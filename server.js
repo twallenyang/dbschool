@@ -374,6 +374,147 @@ app.get('/api/borrow-records', asyncHandler(async (req, res) => {
   sendRows(res, result);
 }));
 
+app.post('/api/borrow-records/:id/return', asyncHandler(async (req, res) => {
+  const missing = validateRequired(req.body, ['HandledBy']);
+
+  if (missing.length > 0) {
+    return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
+  }
+
+  const conditionStatus = String(req.body.ConditionStatus || 'Good').trim();
+  const validConditions = ['Good', 'Damaged', 'Lost'];
+
+  if (!validConditions.includes(conditionStatus)) {
+    return res.status(400).json({ error: 'ConditionStatus must be Good, Damaged, or Lost' });
+  }
+
+  const lateFee = req.body.LateFee === undefined || req.body.LateFee === null || req.body.LateFee === ''
+    ? 0
+    : Number(req.body.LateFee);
+
+  if (!Number.isFinite(lateFee) || lateFee < 0) {
+    return res.status(400).json({ error: 'LateFee must be a non-negative number' });
+  }
+
+  const pool = await poolPromise;
+  const isAdmin = await ensureAdmin(pool, req.body.HandledBy);
+
+  if (!isAdmin) {
+    return res.status(403).json({ error: 'Only admins can return borrow records' });
+  }
+
+  const borrowRecordId = Number(req.params.id);
+
+  if (!Number.isInteger(borrowRecordId)) {
+    return res.status(400).json({ error: 'BorrowRecordID must be an integer' });
+  }
+
+  const transaction = new sql.Transaction(pool);
+
+  try {
+    await transaction.begin();
+
+    const borrowRecordResult = await new sql.Request(transaction)
+      .input('BorrowRecordID', sql.Int, borrowRecordId)
+      .query(`
+        SELECT
+          BorrowRecordID,
+          RequestID,
+          BorrowStatus
+        FROM BORROW_RECORD
+        WHERE BorrowRecordID = @BorrowRecordID;
+      `);
+
+    const borrowRecord = borrowRecordResult.recordset[0];
+
+    if (!borrowRecord) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'Borrow record not found' });
+    }
+
+    if (String(borrowRecord.BorrowStatus).trim() !== 'Borrowed') {
+      await transaction.rollback();
+      return res.status(409).json({ error: 'Only borrowed records can be returned' });
+    }
+
+    const existingReturn = await new sql.Request(transaction)
+      .input('BorrowRecordID', sql.Int, borrowRecordId)
+      .query(`
+        SELECT TOP 1 ReturnRecordID
+        FROM RETURN_RECORD
+        WHERE BorrowRecordID = @BorrowRecordID;
+      `);
+
+    if (existingReturn.recordset.length > 0) {
+      await transaction.rollback();
+      return res.status(409).json({ error: 'This borrow record has already been returned' });
+    }
+
+    const nextBorrowStatus = conditionStatus === 'Lost' ? 'Lost' : 'Returned';
+    const nextEquipmentStatus = {
+      Good: 'Available',
+      Damaged: 'Maintenance',
+      Lost: 'Retired'
+    }[conditionStatus];
+
+    const returnInsert = await new sql.Request(transaction)
+      .input('BorrowRecordID', sql.Int, borrowRecordId)
+      .input('ConditionStatus', sql.NVarChar(20), conditionStatus)
+      .input('LateFee', sql.Decimal(10, 2), lateFee)
+      .input('HandledBy', sql.Int, Number(req.body.HandledBy))
+      .input('Note', sql.NVarChar(500), req.body.Note || '')
+      .query(`
+        INSERT INTO RETURN_RECORD (
+          BorrowRecordID,
+          ReturnedAt,
+          ConditionStatus,
+          LateFee,
+          HandledBy,
+          Note
+        )
+        OUTPUT INSERTED.ReturnRecordID
+        VALUES (
+          @BorrowRecordID,
+          SYSDATETIME(),
+          @ConditionStatus,
+          @LateFee,
+          @HandledBy,
+          @Note
+        );
+      `);
+
+    await new sql.Request(transaction)
+      .input('BorrowRecordID', sql.Int, borrowRecordId)
+      .input('BorrowStatus', sql.NVarChar(20), nextBorrowStatus)
+      .query(`
+        UPDATE BORROW_RECORD
+        SET BorrowStatus = @BorrowStatus
+        WHERE BorrowRecordID = @BorrowRecordID;
+      `);
+
+    await new sql.Request(transaction)
+      .input('RequestID', sql.Int, borrowRecord.RequestID)
+      .input('EquipmentStatus', sql.NVarChar(20), nextEquipmentStatus)
+      .query(`
+        UPDATE e
+        SET e.Status = @EquipmentStatus
+        FROM EQUIPMENT e
+        JOIN BORROW_REQUEST_DETAIL brd
+          ON e.EquipmentID = brd.EquipmentID
+        WHERE brd.RequestID = @RequestID;
+      `);
+
+    await transaction.commit();
+    res.status(201).json({
+      message: 'Borrow record returned',
+      ReturnRecordID: returnInsert.recordset[0].ReturnRecordID
+    });
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+}));
+
 app.get('/api/return-records', asyncHandler(async (req, res) => {
   const pool = await poolPromise;
   const result = await pool.request().query(`

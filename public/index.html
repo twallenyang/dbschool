@@ -1043,8 +1043,69 @@
           { key: 'BorrowedAt', label: '借出日期', value: (row) => formatDate(row.BorrowedAt) },
           { key: 'DueDate', label: '應歸還日', value: (row) => formatDate(row.DueDate) },
           { key: 'HandledByName', label: '經手人' },
-          { key: 'BorrowStatus', label: '借用狀態', value: (row) => statusBadge(row.BorrowStatus), isHtml: true }
+          { key: 'BorrowStatus', label: '借用狀態', value: (row) => statusBadge(row.BorrowStatus), isHtml: true },
+          {
+            key: 'Actions',
+            label: '操作',
+            isHtml: true,
+            className: 'col-actions',
+            value: (row) => {
+              if (row.BorrowStatus !== 'Borrowed' || !isCurrentUserAdmin()) return '';
+              return `
+                <div class="actions">
+                  <button class="primary" onclick="returnBorrowRecord(${row.BorrowRecordID})">歸還</button>
+                </div>
+              `;
+            }
+          }
         ]);
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function returnBorrowRecord(borrowRecordId) {
+      if (!isCurrentUserAdmin()) {
+        showMessage('只有管理員可以登記歸還。', 'error');
+        return;
+      }
+
+      const conditionStatus = window.prompt('請輸入設備狀況：Good / Damaged / Lost', 'Good');
+      if (!conditionStatus) return;
+
+      const normalizedCondition = conditionStatus.trim();
+      if (!['Good', 'Damaged', 'Lost'].includes(normalizedCondition)) {
+        showMessage('設備狀況只能是 Good、Damaged 或 Lost。', 'error');
+        return;
+      }
+
+      const lateFeeInput = window.prompt('請輸入逾期費用，沒有請填 0。', '0');
+      if (lateFeeInput === null) return;
+
+      const lateFee = Number(lateFeeInput || 0);
+      if (!Number.isFinite(lateFee) || lateFee < 0) {
+        showMessage('逾期費用必須是 0 或正數。', 'error');
+        return;
+      }
+
+      const note = window.prompt('備註（可留空）', '');
+      if (note === null) return;
+
+      try {
+        await apiFetch(`/api/borrow-records/${borrowRecordId}/return`, {
+          method: 'POST',
+          body: JSON.stringify({
+            HandledBy: currentUser.UserID,
+            ConditionStatus: normalizedCondition,
+            LateFee: lateFee,
+            Note: note
+          })
+        });
+
+        showMessage(`借用紀錄 #${borrowRecordId} 已登記歸還。`);
+        await loadBorrowAndReturnRecords();
+        await loadEquipment();
+        await loadDashboard();
       } catch (error) {
         showMessage(error.message, 'error');
       }
